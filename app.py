@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -58,7 +57,6 @@ def main():
     
     # Panel 1: Event Alerts
     st.header("1. Event Alerts")
-    # Internal alerts
     alerts = []
     for _, row in kpi_df.iterrows():
         date = row["Date"]
@@ -98,54 +96,49 @@ def main():
 
     # Panel 3: Forecasting (Revenue)
     st.header("3. Forecasting")
-    df = kpi_df.copy().dropna()
-    df["Month_Index"] = np.arange(len(df))
-    X = df[["Month_Index"]]
-    y = df["Revenue"]
+    df_forecast = kpi_df.copy().dropna()
+    df_forecast["Month_Index"] = np.arange(len(df_forecast))
+    X = df_forecast[["Month_Index"]]
+    y = df_forecast["Revenue"]
     model = LinearRegression().fit(X, y)
-    future_idx = np.arange(len(df), len(df)+6).reshape(-1,1)
+    future_idx = np.arange(len(df_forecast), len(df_forecast)+6).reshape(-1,1)
     preds = model.predict(future_idx)
-    # display
     fig, ax = plt.subplots(figsize=(10,4))
-    ax.plot(df["Date"], y, label="Historical")
-    future_dates = pd.date_range(start=df["Date"].iloc[-1] + pd.offsets.MonthBegin(),
-                                 periods=6, freq="MS")
+    ax.plot(df_forecast["Date"], y, label="Historical")
+    future_dates = pd.date_range(start=df_forecast["Date"].iloc[-1] + pd.offsets.MonthBegin(), periods=6, freq="MS")
     ax.plot(future_dates, preds, linestyle="--", label="Forecast")
     ax.legend()
     st.pyplot(fig)
 
-    # --- Panel 4: Impact Analysis ---
+    # Panel 4: Impact Analysis
     st.header("4. Impact Analysis")
-
-    # Load external events with impacts
-    impact_df = load_external_events()  # must include Inventory_Impact & Revenue_Impact
+    impact_df = ext_df.copy()
 
     # 4a. Grouped Bar Chart of Impacts
     fig_imp = px.bar(
-    impact_df,
-    x="Date",
-    y=["Inventory_Impact", "Revenue_Impact"],
-    labels={
-        "value": "Impact Amount (USD)",
-        "variable": "Impact Type"
-    },
-    title="External Event Impacts on Inventory & Revenue"
+        impact_df,
+        x="Date",
+        y=["Inventory_Impact", "Revenue_Impact"],
+        labels={
+            "value": "Impact Amount (USD)",
+            "variable": "Impact Type"
+        },
+        title="External Event Impacts on Inventory & Revenue"
     )
     fig_imp.update_layout(barmode="group", xaxis_tickformat="%b %Y")
     st.plotly_chart(fig_imp, use_container_width=True)
 
     # 4b. Annotate Forecast Chart with Event Markers
     st.subheader("Forecast with Event Annotations")
-    # Assume you stored your forecast figure as `fig` above
     for _, event in impact_df.iterrows():
-    fig.add_vline(
-        x=event["Date"],
-        line_width=1,
-        line_dash="dash",
-        annotation_text=event["Message"],
-        annotation_position="top left",
-        annotation_font_size=10
-    )
+        fig.add_vline(
+            x=event["Date"],
+            line_width=1,
+            line_dash="dash",
+            annotation_text=event["Message"],
+            annotation_position="top left",
+            annotation_font_size=10
+        )
     st.pyplot(fig)
 
 if __name__ == "__main__":
