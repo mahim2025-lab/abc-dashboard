@@ -101,42 +101,55 @@ def show_kpi_monitoring(kpi_df):
         ax.set_title("Inventory Levels Trend")
         st.pyplot(fig)
 
-def show_forecasting(kpi_df):
+def show_forecasting(kpi_df, kpi_col, horizon):
     st.header("3. Forecasting")
     df_f = kpi_df.dropna().copy()
-    df_f["Month_Index"] = np.arange(len(df_f))
-    X, y = df_f[["Month_Index"]], df_f["Revenue"]
+    df_f['Month_Index'] = np.arange(len(df_f))
+    X, y = df_f[[ 'Month_Index' ]], df_f[kpi_col]
     model = train_revenue_model(X, y)
-    future_idx = np.arange(len(df_f), len(df_f)+6).reshape(-1,1)
+    future_idx = np.arange(len(df_f), len(df_f)+horizon).reshape(-1,1)
     preds = model.predict(future_idx)
     fig, ax = plt.subplots(figsize=(10,4))
-    ax.plot(df_f["Date"], y, label="Historical")
-    future_dates = pd.date_range(start=df_f["Date"].iloc[-1] + pd.offsets.MonthBegin(), periods=6, freq="MS")
-    ax.plot(future_dates, preds, linestyle="--", label="Forecast")
+    ax.plot(df_f['Date'], y, label='Historical')
+    future_dates = pd.date_range(start=df_f['Date'].iloc[-1] + pd.offsets.MonthBegin(), periods=horizon, freq='MS')
+    ax.plot(future_dates, preds, linestyle='--', label=f'Forecast ({kpi_col})')
     ax.legend()
     st.pyplot(fig)
     return fig
 
 def show_impact_analysis(ext_df, forecast_fig):
     st.header("4. Impact Analysis")
-    imp_fig = px.bar(ext_df, x="Date", y=["Inventory_Impact","Revenue_Impact"], barmode="group",
-        labels={"value":"Impact (USD)","variable":"Type"}, title="External Event Impacts on Inventory & Revenue")
+    imp_fig = px.bar(ext_df, x='Date', y=['Inventory_Impact','Revenue_Impact'], barmode='group',
+                     labels={'value':'Impact (USD)','variable':'Type'}, title='External Event Impacts')
     st.plotly_chart(imp_fig, use_container_width=True)
     st.subheader("Forecast with Event Annotations")
     ax = forecast_fig.axes[0]
     for _, ev in ext_df.iterrows():
-        ax.axvline(x=ev["Date"], color='red', linestyle='--')
-        ax.text(ev["Date"], ax.get_ylim()[1], ev["Message"], rotation=45, ha='right', va='bottom', fontsize=8)
+        ax.axvline(x=ev['Date'], color='red', linestyle='--')
+        ax.text(ev['Date'], ax.get_ylim()[1], ev['Message'], rotation=45, ha='right', va='bottom', fontsize=8)
     st.pyplot(forecast_fig)
 
 def main():
     kpi_df = load_kpi_data()
     ext_df = load_external_events()
+
+    # Sidebar filters
+    st.sidebar.header('Controls')
+    event_types = ext_df['Type'].unique().tolist()
+    selected_event_types = st.sidebar.multiselect('Event Types', event_types, default=event_types)
+    kpi_options = ['Revenue', 'ROA']
+    selected_kpi = st.sidebar.selectbox('Select KPI for Forecast', kpi_options, index=0)
+    horizon_options = [3, 6, 12]
+    selected_horizon = st.sidebar.selectbox('Forecast Horizon (months)', horizon_options, index=1)
+
+    # Apply filters
+    ext_df = ext_df[ext_df['Type'].isin(selected_event_types)]
+
     st.title("ABC Company: KPI Dashboard")
     show_kpi_summary(kpi_df)
     show_event_alerts(kpi_df, ext_df)
     show_kpi_monitoring(kpi_df)
-    forecast_fig = show_forecasting(kpi_df)
+    forecast_fig = show_forecasting(kpi_df, selected_kpi, selected_horizon)
     show_impact_analysis(ext_df, forecast_fig)
 
 if __name__ == "__main__":
