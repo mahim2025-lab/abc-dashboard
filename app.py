@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -24,10 +23,20 @@ def load_external_events(path="ABC_Company_External_Events.csv"):
     df["Source"] = "External"
     return df[["Date", "Source", "Type", "Message", "Inventory_Impact", "Revenue_Impact"]]
 
+# --- Model Training ---
+@st.cache_resource
+def train_revenue_model(X, y):
+    """
+    Train and cache a Linear Regression model for revenue forecasting.
+    """
+    model = LinearRegression().fit(X, y)
+    return model
+
+# --- Main App ---
 def main():
     st.title("ABC Company: KPI Forecasting & Event Impact Dashboard")
 
-    # Load data
+    # Load datasets
     kpi_df = load_kpi_data()
     ext_df = load_external_events()
 
@@ -57,7 +66,7 @@ def main():
         elif row["Inventory_Change"] < -0.15:
             alerts.append({"Date": date, "Source": "Internal", "Type": "White Swan", "Message": "Inventory reduced efficiently"})
     int_df = pd.DataFrame(alerts)
-    combined = pd.concat([int_df, ext_df[["Date","Source","Type","Message"]]], ignore_index=True)
+    combined = pd.concat([int_df, ext_df[["Date", "Source", "Type", "Message"]]], ignore_index=True)
     combined = combined.sort_values("Date").reset_index(drop=True)
     st.dataframe(combined)
 
@@ -84,35 +93,36 @@ def main():
     df_forecast["Month_Index"] = np.arange(len(df_forecast))
     X = df_forecast[["Month_Index"]]
     y = df_forecast["Revenue"]
-    model = LinearRegression().fit(X, y)
-    future_idx = np.arange(len(df_forecast), len(df_forecast)+6).reshape(-1,1)
+    # Use cached model training
+    model = train_revenue_model(X, y)
+    future_idx = np.arange(len(df_forecast), len(df_forecast) + 6).reshape(-1, 1)
     preds = model.predict(future_idx)
-    fig, ax = plt.subplots(figsize=(10,4))
-    ax.plot(df_forecast["Date"], y, label="Historical")
-    future_dates = pd.date_range(start=df_forecast["Date"].iloc[-1"] + pd.offsets.MonthBegin(), periods=6, freq="MS")
-    ax.plot(future_dates, preds, linestyle="--", label="Forecast")
-    ax.legend()
-    st.pyplot(fig)
+    forecast_fig, forecast_ax = plt.subplots(figsize=(10, 4))
+    forecast_ax.plot(df_forecast["Date"], y, label="Historical")
+    future_dates = pd.date_range(start=df_forecast["Date"].iloc[-1] + pd.offsets.MonthBegin(), periods=6, freq="MS")
+    forecast_ax.plot(future_dates, preds, linestyle="--", label="Forecast")
+    forecast_ax.legend()
+    st.pyplot(forecast_fig)
 
     # Panel 4: Impact Analysis
     st.header("4. Impact Analysis")
     impact_df = ext_df.copy()
 
-    # Grouped Bar Chart
-    fig_imp = px.bar(
+    # 4a. Grouped Bar Chart of Impacts
+    impact_fig = px.bar(
         impact_df,
         x="Date",
         y=["Inventory_Impact", "Revenue_Impact"],
         labels={"value": "Impact Amount (USD)", "variable": "Impact Type"},
         title="External Event Impacts on Inventory & Revenue"
     )
-    fig_imp.update_layout(barmode="group", xaxis_tickformat="%b %Y")
-    st.plotly_chart(fig_imp, use_container_width=True)
+    impact_fig.update_layout(barmode="group", xaxis_tickformat="%b %Y")
+    st.plotly_chart(impact_fig, use_container_width=True)
 
-    # Annotate Forecast Chart
+    # 4b. Annotate Forecast Chart with Event Markers
     st.subheader("Forecast with Event Annotations")
     for _, event in impact_df.iterrows():
-        fig.add_vline(
+        forecast_fig.add_vline(
             x=event["Date"],
             line_width=1,
             line_dash="dash",
@@ -120,7 +130,7 @@ def main():
             annotation_position="top left",
             annotation_font_size=10
         )
-    st.pyplot(fig)
+    st.pyplot(forecast_fig)
 
 if __name__ == "__main__":
     main()
