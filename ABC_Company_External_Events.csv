@@ -1,0 +1,11 @@
+Date,Event_Type,Event_Title,Description,Inventory_Impact,Revenue_Impact
+2023-03-15,Black Swan,Massive Fire at Northwest Plant,"Fire caused ~$20M inventory loss, impacting revenue by ~$30M.",-20000000,-30000000
+2023-06-10,Black Swan,Supply Chain Delay due to Trade War,"Trade war escalated, causing $15M inventory holding increase and $25M revenue drop.",15000000,-25000000
+2023-09-01,White Swan,Major EU Customer Contract Won,Contract secured leads to $40M revenue boost and $5M inventory drawdown.,-5000000,40000000
+2023-11-20,Black Swan,Hurricane Disrupts Gulf Operations,"Hurricane caused $10M inventory loss, impacting revenue by $18M.",-10000000,-18000000
+2024-01-10,White Swan,Successful New Product Launch,Launch drove $50M revenue boost with $8M inventory allocation.,8000000,50000000
+2024-03-05,Black Swan,Cybersecurity Breach Halts Production,"Breach halted operations, resulting in $22M revenue loss.",0,-22000000
+2024-05-18,White Swan,Acquisition of Local Competitor,Acquisition adds $8M inventory and boosts revenue by $35M.,8000000,35000000
+2024-07-22,White Swan,New Factory Opening in Asia,Factory opening increases inventory by $12M and revenue by $28M.,12000000,28000000
+2024-09-12,Black Swan,Regulatory Compliance Cost Spike,"New regulations increased costs, leading to $12M revenue drop.",0,-12000000
+2024-12-01,White Swan,Holiday Season Sales Surge,Holiday surge draws down $10M inventory and increases revenue by $60M.,-10000000,60000000
