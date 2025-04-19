@@ -13,6 +13,7 @@ def load_kpi_data(path="ABC_Company_KPI_Data.csv"):
     df = pd.read_csv(path, parse_dates=["Date"])
     df["Revenue_Change"] = df["Revenue"].pct_change().round(4)
     df["Profit_Margin_Change"] = df["Profit_Margin"].pct_change().round(4)
+    df["ROA_Change"] = df["ROA"].pct_change().round(4)
     df["Inventory_Change"] = df["Inventory_Levels"].pct_change().round(4)
     return df
 
