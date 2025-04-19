@@ -106,4 +106,4 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ---
 
-*Prepared as part of the M.Sc. Data Science Project at IIM Calcutta — “KPI-Based Corporate Performance Forecasting Dashboard.”*
+*Prepared as part of the M.Sc. Data Science Project at SSODL — “KPI-Based Corporate Performance Forecasting Dashboard.”*
