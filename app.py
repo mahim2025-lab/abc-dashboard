@@ -41,7 +41,6 @@ def show_kpi_summary(kpi_df):
 
 def show_event_alerts(kpi_df, ext_df):
     st.header("1. Event Alerts")
-    # Vectorized internal alerts
     alerts = pd.concat([
         kpi_df.loc[kpi_df['Revenue_Change'] < -0.10, ['Date']]
             .assign(Source='Internal', Type='Black Swan', Message='Revenue dropped sharply'),
@@ -56,7 +55,6 @@ def show_event_alerts(kpi_df, ext_df):
         kpi_df.loc[kpi_df['Inventory_Change'] < -0.15, ['Date']]
             .assign(Source='Internal', Type='White Swan', Message='Inventory reduced efficiently')
     ], ignore_index=True)
-    # Combine with external events
     combined = pd.concat([alerts, ext_df[['Date','Source','Type','Message']]], ignore_index=True)
     combined = combined.sort_values('Date').reset_index(drop=True)
     st.dataframe(combined)
@@ -95,12 +93,20 @@ def show_forecasting(kpi_df):
 
 def show_impact_analysis(ext_df, forecast_fig):
     st.header("4. Impact Analysis")
-    imp_fig = px.bar(ext_df, x="Date", y=["Inventory_Impact","Revenue_Impact"], barmode="group",
-                     labels={"value":"Impact (USD)","variable":"Type"})
+    imp_fig = px.bar(
+        ext_df,
+        x="Date",
+        y=["Inventory_Impact","Revenue_Impact"],
+        barmode="group",
+        labels={"value":"Impact (USD)","variable":"Type"},
+        title="External Event Impacts on Inventory & Revenue"
+    )
     st.plotly_chart(imp_fig, use_container_width=True)
     st.subheader("Forecast with Event Annotations")
+    ax = forecast_fig.axes[0]
     for _, ev in ext_df.iterrows():
-        forecast_fig.add_vline(x=ev["Date"], line_dash="dash", annotation_text=ev["Message"], annotation_position="top left")
+        ax.axvline(x=ev["Date"], color='red', linestyle='--')
+        ax.text(ev["Date"], ax.get_ylim()[1], ev["Message"], rotation=90, va='bottom', fontsize=8)
     st.pyplot(forecast_fig)
 
 
