@@ -26,111 +26,92 @@ def load_external_events(path="ABC_Company_External_Events.csv"):
 # --- Model Training ---
 @st.cache_resource
 def train_revenue_model(X, y):
-    """
-    Train and cache a Linear Regression model for revenue forecasting.
-    """
-    model = LinearRegression().fit(X, y)
-    return model
+    return LinearRegression().fit(X, y)
 
-# --- Main App ---
-def main():
-    st.title("ABC Company: KPI Forecasting & Event Impact Dashboard")
-
-    # Load datasets
-    kpi_df = load_kpi_data()
-    ext_df = load_external_events()
-
-    # KPI Summary at a glance
+# --- Helper Display Functions ---
+def show_kpi_summary(kpi_df):
     latest = kpi_df.iloc[-1]
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Latest Revenue", f"${latest['Revenue']:,.0f}", f"{latest['Revenue_Change']*100:.1f}%")
-    col2.metric("Latest Profit Margin", f"{latest['Profit_Margin']:.2%}", f"{latest['Profit_Margin_Change']*100:.1f}%")
-    col3.metric("Latest ROA", f"{latest['ROA']:.2%}", f"{latest['ROA_Change']*100:.1f}%")
-    col4.metric("Latest Inventory Level", f"{latest['Inventory_Levels']:,.0f}", f"{latest['Inventory_Change']*100:.1f}%")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Latest Revenue", f"${latest['Revenue']:,.0f}", f"{latest['Revenue_Change']*100:.1f}%")
+    c2.metric("Latest Profit Margin", f"{latest['Profit_Margin']:.2%}", f"{latest['Profit_Margin_Change']*100:.1f}%")
+    c3.metric("Latest ROA", f"{latest['ROA']:.2%}", f"{latest['ROA_Change']*100:.1f}%")
+    c4.metric("Latest Inventory", f"{latest['Inventory_Levels']:,.0f}", f"{latest['Inventory_Change']*100:.1f}%")
 
-    # Panel 1: Event Alerts
+
+def show_event_alerts(kpi_df, ext_df):
     st.header("1. Event Alerts")
-    alerts = []
-    for _, row in kpi_df.iterrows():
-        date = row["Date"]
-        if row["Revenue_Change"] < -0.10:
-            alerts.append({"Date": date, "Source": "Internal", "Type": "Black Swan", "Message": "Revenue dropped sharply"})
-        elif row["Revenue_Change"] > 0.10:
-            alerts.append({"Date": date, "Source": "Internal", "Type": "White Swan", "Message": "Revenue surged significantly"})
-        if row["Profit_Margin_Change"] < -0.05:
-            alerts.append({"Date": date, "Source": "Internal", "Type": "Black Swan", "Message": "Profit margin declined heavily"})
-        elif row["Profit_Margin_Change"] > 0.05:
-            alerts.append({"Date": date, "Source": "Internal", "Type": "White Swan", "Message": "Profit margin improved significantly"})
-        if row["Inventory_Change"] > 0.15:
-            alerts.append({"Date": date, "Source": "Internal", "Type": "Black Swan", "Message": "Inventory spiked unexpectedly"})
-        elif row["Inventory_Change"] < -0.15:
-            alerts.append({"Date": date, "Source": "Internal", "Type": "White Swan", "Message": "Inventory reduced efficiently"})
-    int_df = pd.DataFrame(alerts)
-    combined = pd.concat([int_df, ext_df[["Date", "Source", "Type", "Message"]]], ignore_index=True)
-    combined = combined.sort_values("Date").reset_index(drop=True)
+    # Vectorized internal alerts
+    alerts = pd.concat([
+        kpi_df.loc[kpi_df['Revenue_Change'] < -0.10, ['Date']]
+            .assign(Source='Internal', Type='Black Swan', Message='Revenue dropped sharply'),
+        kpi_df.loc[kpi_df['Revenue_Change'] >  0.10, ['Date']]
+            .assign(Source='Internal', Type='White Swan', Message='Revenue surged significantly'),
+        kpi_df.loc[kpi_df['Profit_Margin_Change'] < -0.05, ['Date']]
+            .assign(Source='Internal', Type='Black Swan', Message='Profit margin declined heavily'),
+        kpi_df.loc[kpi_df['Profit_Margin_Change'] >  0.05, ['Date']]
+            .assign(Source='Internal', Type='White Swan', Message='Profit margin improved significantly'),
+        kpi_df.loc[kpi_df['Inventory_Change'] >  0.15, ['Date']]
+            .assign(Source='Internal', Type='Black Swan', Message='Inventory spiked unexpectedly'),
+        kpi_df.loc[kpi_df['Inventory_Change'] < -0.15, ['Date']]
+            .assign(Source='Internal', Type='White Swan', Message='Inventory reduced efficiently')
+    ], ignore_index=True)
+    # Combine with external events
+    combined = pd.concat([alerts, ext_df[['Date','Source','Type','Message']]], ignore_index=True)
+    combined = combined.sort_values('Date').reset_index(drop=True)
     st.dataframe(combined)
 
-    # Panel 2: KPI Monitoring
+
+def show_kpi_monitoring(kpi_df):
     st.header("2. KPI Monitoring")
     cols = st.columns(2)
-    with cols[0]:
-        st.subheader("Revenue")
-        st.line_chart(kpi_df.set_index("Date")["Revenue"])
-    with cols[1]:
-        st.subheader("Profit Margin")
-        st.line_chart(kpi_df.set_index("Date")["Profit_Margin"])
+    cols[0].subheader("Revenue")
+    cols[0].line_chart(kpi_df.set_index("Date")["Revenue"])
+    cols[1].subheader("Profit Margin")
+    cols[1].line_chart(kpi_df.set_index("Date")["Profit_Margin"])
     cols2 = st.columns(2)
-    with cols2[0]:
-        st.subheader("ROA")
-        st.line_chart(kpi_df.set_index("Date")["ROA"])
-    with cols2[1]:
-        st.subheader("Inventory Levels")
-        st.line_chart(kpi_df.set_index("Date")["Inventory_Levels"])
+    cols2[0].subheader("ROA")
+    cols2[0].line_chart(kpi_df.set_index("Date")["ROA"])
+    cols2[1].subheader("Inventory Levels")
+    cols2[1].line_chart(kpi_df.set_index("Date")["Inventory_Levels"])
 
-    # Panel 3: Forecasting (Revenue)
+
+def show_forecasting(kpi_df):
     st.header("3. Forecasting")
-    df_forecast = kpi_df.dropna().copy()
-    df_forecast["Month_Index"] = np.arange(len(df_forecast))
-    X = df_forecast[["Month_Index"]]
-    y = df_forecast["Revenue"]
-    # Use cached model training
+    df_f = kpi_df.dropna().copy()
+    df_f["Month_Index"] = np.arange(len(df_f))
+    X, y = df_f[["Month_Index"]], df_f["Revenue"]
     model = train_revenue_model(X, y)
-    future_idx = np.arange(len(df_forecast), len(df_forecast) + 6).reshape(-1, 1)
+    future_idx = np.arange(len(df_f), len(df_f)+6).reshape(-1,1)
     preds = model.predict(future_idx)
-    forecast_fig, forecast_ax = plt.subplots(figsize=(10, 4))
-    forecast_ax.plot(df_forecast["Date"], y, label="Historical")
-    future_dates = pd.date_range(start=df_forecast["Date"].iloc[-1] + pd.offsets.MonthBegin(), periods=6, freq="MS")
-    forecast_ax.plot(future_dates, preds, linestyle="--", label="Forecast")
-    forecast_ax.legend()
-    st.pyplot(forecast_fig)
+    fig, ax = plt.subplots(figsize=(10,4))
+    ax.plot(df_f["Date"], y, label="Historical")
+    future_dates = pd.date_range(start=df_f["Date"].iloc[-1] + pd.offsets.MonthBegin(), periods=6, freq="MS")
+    ax.plot(future_dates, preds, linestyle="--", label="Forecast")
+    ax.legend()
+    st.pyplot(fig)
+    return fig
 
-    # Panel 4: Impact Analysis
+
+def show_impact_analysis(ext_df, forecast_fig):
     st.header("4. Impact Analysis")
-    impact_df = ext_df.copy()
-
-    # 4a. Grouped Bar Chart of Impacts
-    impact_fig = px.bar(
-        impact_df,
-        x="Date",
-        y=["Inventory_Impact", "Revenue_Impact"],
-        labels={"value": "Impact Amount (USD)", "variable": "Impact Type"},
-        title="External Event Impacts on Inventory & Revenue"
-    )
-    impact_fig.update_layout(barmode="group", xaxis_tickformat="%b %Y")
-    st.plotly_chart(impact_fig, use_container_width=True)
-
-    # 4b. Annotate Forecast Chart with Event Markers
+    imp_fig = px.bar(ext_df, x="Date", y=["Inventory_Impact","Revenue_Impact"], barmode="group",
+                     labels={"value":"Impact (USD)","variable":"Type"})
+    st.plotly_chart(imp_fig, use_container_width=True)
     st.subheader("Forecast with Event Annotations")
-    for _, event in impact_df.iterrows():
-        forecast_fig.add_vline(
-            x=event["Date"],
-            line_width=1,
-            line_dash="dash",
-            annotation_text=event["Message"],
-            annotation_position="top left",
-            annotation_font_size=10
-        )
+    for _, ev in ext_df.iterrows():
+        forecast_fig.add_vline(x=ev["Date"], line_dash="dash", annotation_text=ev["Message"], annotation_position="top left")
     st.pyplot(forecast_fig)
+
+
+def main():
+    kpi_df = load_kpi_data()
+    ext_df = load_external_events()
+    st.title("ABC Company: KPI Dashboard")
+    show_kpi_summary(kpi_df)
+    show_event_alerts(kpi_df, ext_df)
+    show_kpi_monitoring(kpi_df)
+    forecast_fig = show_forecasting(kpi_df)
+    show_impact_analysis(ext_df, forecast_fig)
 
 if __name__ == "__main__":
     main()
