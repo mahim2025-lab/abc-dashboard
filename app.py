@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -23,7 +24,6 @@ def load_external_events(path="ABC_Company_External_Events.csv"):
     df["Source"] = "External"
     return df[["Date", "Source", "Type", "Message", "Inventory_Impact", "Revenue_Impact"]]
 
-# --- Main App ---
 def main():
     st.title("ABC Company: KPI Forecasting & Event Impact Dashboard")
 
@@ -34,27 +34,11 @@ def main():
     # KPI Summary at a glance
     latest = kpi_df.iloc[-1]
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric(
-        label="Latest Revenue",
-        value=f"${latest['Revenue']:,.0f}",
-        delta=f"{latest['Revenue_Change']*100:.1f}%"
-    )
-    col2.metric(
-        label="Latest Profit Margin",
-        value=f"{latest['Profit_Margin']:.2%}",
-        delta=f"{latest['Profit_Margin_Change']*100:.1f}%"
-    )
-    col3.metric(
-        label="Latest ROA",
-        value=f"{latest['ROA']:.2%}",
-        delta=f"{latest['ROA_Change']*100:.1f}%"
-    )
-    col4.metric(
-        label="Latest Inventory Level",
-        value=f"{latest['Inventory_Levels']:,.0f}",
-        delta=f"{latest['Inventory_Change']*100:.1f}%"
-    )
-    
+    col1.metric("Latest Revenue", f"${latest['Revenue']:,.0f}", f"{latest['Revenue_Change']*100:.1f}%")
+    col2.metric("Latest Profit Margin", f"{latest['Profit_Margin']:.2%}", f"{latest['Profit_Margin_Change']*100:.1f}%")
+    col3.metric("Latest ROA", f"{latest['ROA']:.2%}", f"{latest['ROA_Change']*100:.1f}%")
+    col4.metric("Latest Inventory Level", f"{latest['Inventory_Levels']:,.0f}", f"{latest['Inventory_Change']*100:.1f}%")
+
     # Panel 1: Event Alerts
     st.header("1. Event Alerts")
     alerts = []
@@ -96,7 +80,7 @@ def main():
 
     # Panel 3: Forecasting (Revenue)
     st.header("3. Forecasting")
-    df_forecast = kpi_df.copy().dropna()
+    df_forecast = kpi_df.dropna().copy()
     df_forecast["Month_Index"] = np.arange(len(df_forecast))
     X = df_forecast[["Month_Index"]]
     y = df_forecast["Revenue"]
@@ -105,7 +89,7 @@ def main():
     preds = model.predict(future_idx)
     fig, ax = plt.subplots(figsize=(10,4))
     ax.plot(df_forecast["Date"], y, label="Historical")
-    future_dates = pd.date_range(start=df_forecast["Date"].iloc[-1] + pd.offsets.MonthBegin(), periods=6, freq="MS")
+    future_dates = pd.date_range(start=df_forecast["Date"].iloc[-1"] + pd.offsets.MonthBegin(), periods=6, freq="MS")
     ax.plot(future_dates, preds, linestyle="--", label="Forecast")
     ax.legend()
     st.pyplot(fig)
@@ -114,21 +98,18 @@ def main():
     st.header("4. Impact Analysis")
     impact_df = ext_df.copy()
 
-    # 4a. Grouped Bar Chart of Impacts
+    # Grouped Bar Chart
     fig_imp = px.bar(
         impact_df,
         x="Date",
         y=["Inventory_Impact", "Revenue_Impact"],
-        labels={
-            "value": "Impact Amount (USD)",
-            "variable": "Impact Type"
-        },
+        labels={"value": "Impact Amount (USD)", "variable": "Impact Type"},
         title="External Event Impacts on Inventory & Revenue"
     )
     fig_imp.update_layout(barmode="group", xaxis_tickformat="%b %Y")
     st.plotly_chart(fig_imp, use_container_width=True)
 
-    # 4b. Annotate Forecast Chart with Event Markers
+    # Annotate Forecast Chart
     st.subheader("Forecast with Event Annotations")
     for _, event in impact_df.iterrows():
         fig.add_vline(
