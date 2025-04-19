@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.set_page_config(page_title="ABC Company Dashboard", layout="wide")
 
@@ -89,11 +90,39 @@ def main():
     ax.legend()
     st.pyplot(fig)
 
-    # Panel 4: Impact Analysis
+    # --- Panel 4: Impact Analysis ---
     st.header("4. Impact Analysis")
-    st.write("External Event Impacts on KPI:")
-    impact_df = ext_df[["Date","Message","Inventory_Impact","Revenue_Impact"]]
-    st.table(impact_df)
+
+    # Load external events with impacts
+    impact_df = load_external_events()  # must include Inventory_Impact & Revenue_Impact
+
+    # 4a. Grouped Bar Chart of Impacts
+    fig_imp = px.bar(
+    impact_df,
+    x="Date",
+    y=["Inventory_Impact", "Revenue_Impact"],
+    labels={
+        "value": "Impact Amount (USD)",
+        "variable": "Impact Type"
+    },
+    title="External Event Impacts on Inventory & Revenue"
+    )
+    fig_imp.update_layout(barmode="group", xaxis_tickformat="%b %Y")
+    st.plotly_chart(fig_imp, use_container_width=True)
+
+    # 4b. Annotate Forecast Chart with Event Markers
+    st.subheader("Forecast with Event Annotations")
+    # Assume you stored your forecast figure as `fig` above
+    for _, event in impact_df.iterrows():
+    fig.add_vline(
+        x=event["Date"],
+        line_width=1,
+        line_dash="dash",
+        annotation_text=event["Message"],
+        annotation_position="top left",
+        annotation_font_size=10
+    )
+    st.pyplot(fig)
 
 if __name__ == "__main__":
     main()
