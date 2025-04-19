@@ -1,8 +1,10 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import plotly.express as px
 
 st.set_page_config(page_title="ABC Company Dashboard", layout="wide")
@@ -38,7 +40,6 @@ def show_kpi_summary(kpi_df):
     c3.metric("Latest ROA", f"{latest['ROA']:.2%}", f"{latest['ROA_Change']*100:.1f}%")
     c4.metric("Latest Inventory", f"{latest['Inventory_Levels']:,.0f}", f"{latest['Inventory_Change']*100:.1f}%")
 
-
 def show_event_alerts(kpi_df, ext_df):
     st.header("1. Event Alerts")
     alerts = pd.concat([
@@ -59,20 +60,46 @@ def show_event_alerts(kpi_df, ext_df):
     combined = combined.sort_values('Date').reset_index(drop=True)
     st.dataframe(combined)
 
-
 def show_kpi_monitoring(kpi_df):
     st.header("2. KPI Monitoring")
     cols = st.columns(2)
-    cols[0].subheader("Revenue")
-    cols[0].line_chart(kpi_df.set_index("Date")["Revenue"])
-    cols[1].subheader("Profit Margin")
-    cols[1].line_chart(kpi_df.set_index("Date")["Profit_Margin"])
+    with cols[0]:
+        fig, ax = plt.subplots(figsize=(6,3))
+        ax.plot(kpi_df['Date'], kpi_df['Revenue'], marker='o')
+        ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1,4,7,10]))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b ’%y"))
+        plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+        ax.set_ylabel("Revenue")
+        ax.set_title("Revenue Trend")
+        st.pyplot(fig)
+    with cols[1]:
+        fig, ax = plt.subplots(figsize=(6,3))
+        ax.plot(kpi_df['Date'], kpi_df['Profit_Margin'], marker='o')
+        ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1,4,7,10]))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b ’%y"))
+        plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+        ax.set_ylabel("Profit Margin")
+        ax.set_title("Profit Margin Trend")
+        st.pyplot(fig)
     cols2 = st.columns(2)
-    cols2[0].subheader("ROA")
-    cols2[0].line_chart(kpi_df.set_index("Date")["ROA"])
-    cols2[1].subheader("Inventory Levels")
-    cols2[1].line_chart(kpi_df.set_index("Date")["Inventory_Levels"])
-
+    with cols2[0]:
+        fig, ax = plt.subplots(figsize=(6,3))
+        ax.plot(kpi_df['Date'], kpi_df['ROA'], marker='o')
+        ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1,4,7,10]))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b ’%y"))
+        plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+        ax.set_ylabel("ROA")
+        ax.set_title("ROA Trend")
+        st.pyplot(fig)
+    with cols2[1]:
+        fig, ax = plt.subplots(figsize=(6,3))
+        ax.plot(kpi_df['Date'], kpi_df['Inventory_Levels'], marker='o')
+        ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1,4,7,10]))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b ’%y"))
+        plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+        ax.set_ylabel("Inventory Levels")
+        ax.set_title("Inventory Levels Trend")
+        st.pyplot(fig)
 
 def show_forecasting(kpi_df):
     st.header("3. Forecasting")
@@ -90,25 +117,17 @@ def show_forecasting(kpi_df):
     st.pyplot(fig)
     return fig
 
-
 def show_impact_analysis(ext_df, forecast_fig):
     st.header("4. Impact Analysis")
-    imp_fig = px.bar(
-        ext_df,
-        x="Date",
-        y=["Inventory_Impact","Revenue_Impact"],
-        barmode="group",
-        labels={"value":"Impact (USD)","variable":"Type"},
-        title="External Event Impacts on Inventory & Revenue"
-    )
+    imp_fig = px.bar(ext_df, x="Date", y=["Inventory_Impact","Revenue_Impact"], barmode="group",
+        labels={"value":"Impact (USD)","variable":"Type"}, title="External Event Impacts on Inventory & Revenue")
     st.plotly_chart(imp_fig, use_container_width=True)
     st.subheader("Forecast with Event Annotations")
     ax = forecast_fig.axes[0]
     for _, ev in ext_df.iterrows():
         ax.axvline(x=ev["Date"], color='red', linestyle='--')
-        ax.text(ev["Date"], ax.get_ylim()[1], ev["Message"], rotation=90, va='bottom', fontsize=8)
+        ax.text(ev["Date"], ax.get_ylim()[1], ev["Message"], rotation=45, ha='right', va='bottom', fontsize=8)
     st.pyplot(forecast_fig)
-
 
 def main():
     kpi_df = load_kpi_data()
