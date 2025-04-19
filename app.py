@@ -32,6 +32,30 @@ def main():
     kpi_df = load_kpi_data()
     ext_df = load_external_events()
 
+    # KPI Summary at a glance
+    latest = kpi_df.iloc[-1]
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric(
+        label="Latest Revenue",
+        value=f"${latest['Revenue']:,.0f}",
+        delta=f"{latest['Revenue_Change']*100:.1f}%"
+    )
+    col2.metric(
+        label="Latest Profit Margin",
+        value=f"{latest['Profit_Margin']:.2%}",
+        delta=f"{latest['Profit_Margin_Change']*100:.1f}%"
+    )
+    col3.metric(
+        label="Latest ROA",
+        value=f"{latest['ROA']:.2%}",
+        delta=f"{latest['ROA_Change']*100:.1f}%"
+    )
+    col4.metric(
+        label="Latest Inventory Level",
+        value=f"{latest['Inventory_Levels']:,.0f}",
+        delta=f"{latest['Inventory_Change']*100:.1f}%"
+    )
+    
     # Panel 1: Event Alerts
     st.header("1. Event Alerts")
     # Internal alerts
