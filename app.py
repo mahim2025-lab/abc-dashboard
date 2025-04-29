@@ -131,6 +131,28 @@ def show_impact_analysis(ext_df, forecast_fig):
         )
     st.pyplot(forecast_fig)
 
+def show_chatbot():
+    # Floating Chat Button Logic
+    if "chat_open" not in st.session_state:
+        st.session_state.chat_open = False
+
+    cols = st.columns([10, 1])
+    with cols[1]:
+        if st.button("💬 Open Chat", key="chat_button"):
+            st.session_state.chat_open = not st.session_state.chat_open
+
+    if st.session_state.chat_open:
+        st.markdown("---")
+        st.subheader("KPI Assistant Chat")
+        user_query = st.text_input("Type your question here:")
+        if user_query:
+            with st.spinner('Thinking...'):
+                model = genai.GenerativeModel("gemini-1.5-pro")
+                response = model.generate_content(
+                    f"You are a KPI dashboard assistant. Answer based on KPIs.\nQuestion: {user_query}"
+                )
+                st.success(response.text)
+
 def main():
     kpi_df = load_kpi_data()
     ext_df = load_external_events()
@@ -142,15 +164,7 @@ def main():
     show_kpi_monitoring(kpi_df)
     forecast_fig = show_forecasting(kpi_df)
     show_impact_analysis(ext_df, forecast_fig)
-
-    st.header("Ask Your KPI Assistant")
-    user_query = st.text_input("Ask your question about KPIs, trends, or events:")
-    if user_query:
-        model = genai.GenerativeModel("gemini-1.5-pro")
-        response = model.generate_content(
-            f"You are a KPI dashboard assistant. Provide clear, brief answers based on business KPIs.\nQuestion: {user_query}"
-        )
-        st.success(response.text)
+    show_chatbot()
 
 if __name__ == "__main__":
     main()
