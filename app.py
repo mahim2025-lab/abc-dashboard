@@ -40,20 +40,22 @@ def show_kpi_summary(df):
     col4.metric("Latest Inventory Level", f"${latest['Inventory_Levels']:,.0f}", f"{latest['Inventory_Change']*100:.1f}%")
 
 def show_selected_event_alerts(ext_df):
-    st.header("1. Selected Event Alerts")
-    prioritized_events = ext_df.sort_values(by="Revenue_Impact", key=abs, ascending=False).head(5)
-    cols = st.columns(2)
-    for idx, (_, event) in enumerate(prioritized_events.iterrows()):
-        with cols[idx % 2]:
-            with st.container():
-                st.markdown(f"""<div style='border:1px solid #ccc;padding:10px;border-radius:10px;margin:5px;background:#f9f9f9'>
-                <strong>{event['Type']}</strong><br>
-                <em>{event['Date'].strftime('%b %d, %Y')}</em><br>
-                <p>{event['Message']}</p>
-                <p><strong>Revenue Impact:</strong> ${event['Revenue_Impact']:,.0f}</p>
-                <p><strong>Inventory Impact:</strong> ${event['Inventory_Impact']:,.0f}</p>
-                <a href="{event['Details_URL']}" target="_blank">View Details</a>
-                </div>""", unsafe_allow_html=True)
+    st.header("1. External Event Alerts")
+    
+    available_types = ext_df["Type"].unique().tolist()
+    selected_types = st.multiselect("Filter by Event Type:", options=available_types, default=available_types)
+
+    filtered_events = ext_df[ext_df["Type"].isin(selected_types)]
+    prioritized_events = filtered_events.sort_values(by="Revenue_Impact", key=abs, ascending=False).head(6)
+
+    for _, event in prioritized_events.iterrows():
+        with st.container():
+            st.subheader(f"{event['Type']}: {event['Message']}")
+            st.write(f"Date: {event['Date'].strftime('%b %d, %Y')}")
+            st.write(f"Revenue Impact: ${event['Revenue_Impact']:,.0f}")
+            st.write(f"Inventory Impact: ${event['Inventory_Impact']:,.0f}")
+            st.link_button("View Details", event['Details_URL'])
+            st.markdown("---")
 
 def show_kpi_monitoring(df):
     st.header("2. KPI Monitoring")
