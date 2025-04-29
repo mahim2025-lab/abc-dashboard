@@ -136,10 +136,12 @@ def show_chatbot():
     if "chat_open" not in st.session_state:
         st.session_state.chat_open = False
 
-    cols = st.columns([10, 1])
-    with cols[1]:
-        if st.button("💬 Open Chat", key="chat_button"):
-            st.session_state.chat_open = not st.session_state.chat_open
+   # Move the chat button to top right
+    header_cols = st.columns([8, 1])
+
+    with header_cols[1]:
+    if st.button("💬 Open Chat", key="chat_button"):
+        st.session_state.chat_open = not st.session_state.chat_open
 
     if st.session_state.chat_open:
         st.markdown("---")
