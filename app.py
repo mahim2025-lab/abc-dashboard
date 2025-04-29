@@ -40,7 +40,7 @@ def show_kpi_summary(df):
     col4.metric("Latest Inventory Level", f"${latest['Inventory_Levels']:,.0f}", f"{latest['Inventory_Change']*100:.1f}%")
 
 def show_selected_event_alerts(ext_df):
-    st.header("1. Selected Event Alerts")
+    st.header("1. Event Alerts")
     prioritized_events = ext_df.sort_values(by="Revenue_Impact", key=abs, ascending=False).head(5)
 
     for _, event in prioritized_events.iterrows():
