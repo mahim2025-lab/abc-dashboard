@@ -146,7 +146,7 @@ def show_chatbot():
             st.session_state.chat_open = not st.session_state.chat_open
 
     if st.session_state.chat_open:
-        st.subheader("KPI Assistant Chat")
+        st.subheader("KPI Assistant")
         user_query = st.text_input("Type your question here:")
         if user_query:
             with st.spinner('Thinking...'):
