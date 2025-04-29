@@ -40,17 +40,20 @@ def show_kpi_summary(df):
     col4.metric("Latest Inventory Level", f"${latest['Inventory_Levels']:,.0f}", f"{latest['Inventory_Change']*100:.1f}%")
 
 def show_selected_event_alerts(ext_df):
-    st.header("1. Event Alerts")
+    st.header("1. Selected Event Alerts")
     prioritized_events = ext_df.sort_values(by="Revenue_Impact", key=abs, ascending=False).head(5)
-
-    for _, event in prioritized_events.iterrows():
-        with st.container():
-            st.subheader(f"{event['Type']}: {event['Message']}")
-            st.write(f"Date: {event['Date'].strftime('%b %d, %Y')}")
-            st.write(f"Revenue Impact: ${event['Revenue_Impact']:,.0f}")
-            st.write(f"Inventory Impact: ${event['Inventory_Impact']:,.0f}")
-            st.link_button("View Details", event['Details_URL'])
-            st.markdown("---")
+    cols = st.columns(2)
+    for idx, (_, event) in enumerate(prioritized_events.iterrows()):
+        with cols[idx % 2]:
+            with st.container():
+                st.markdown(f"""<div style='border:1px solid #ccc;padding:10px;border-radius:10px;margin:5px;background:#f9f9f9'>
+                <strong>{event['Type']}</strong><br>
+                <em>{event['Date'].strftime('%b %d, %Y')}</em><br>
+                <p>{event['Message']}</p>
+                <p><strong>Revenue Impact:</strong> ${event['Revenue_Impact']:,.0f}</p>
+                <p><strong>Inventory Impact:</strong> ${event['Inventory_Impact']:,.0f}</p>
+                <a href="{event['Details_URL']}" target="_blank">View Details</a>
+                </div>""", unsafe_allow_html=True)
 
 def show_kpi_monitoring(df):
     st.header("2. KPI Monitoring")
@@ -132,19 +135,15 @@ def show_impact_analysis(ext_df, forecast_fig):
     st.pyplot(forecast_fig)
 
 def show_chatbot():
-    # Floating Chat Button Logic
     if "chat_open" not in st.session_state:
         st.session_state.chat_open = False
 
-   # Move the chat button to top right
-    header_cols = st.columns([8, 1])
-
-    with header_cols[1]:
-    if st.button("💬 Open Chat", key="chat_button"):
-        st.session_state.chat_open = not st.session_state.chat_open
+    chat_cols = st.columns([8, 1])
+    with chat_cols[1]:
+        if st.button("💬 Open Chat", key="chat_button"):
+            st.session_state.chat_open = not st.session_state.chat_open
 
     if st.session_state.chat_open:
-        st.markdown("---")
         st.subheader("KPI Assistant Chat")
         user_query = st.text_input("Type your question here:")
         if user_query:
@@ -161,12 +160,12 @@ def main():
 
     st.title("ABC Company: KPI Dashboard")
 
+    show_chatbot()
     show_kpi_summary(kpi_df)
     show_selected_event_alerts(ext_df)
     show_kpi_monitoring(kpi_df)
     forecast_fig = show_forecasting(kpi_df)
     show_impact_analysis(ext_df, forecast_fig)
-    show_chatbot()
 
 if __name__ == "__main__":
     main()
