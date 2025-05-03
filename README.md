@@ -106,4 +106,4 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ---
 
-*Prepared as part of the M.Sc. Data Science Project at SSODL — “Corporate Performance Forecasting and Impact Dashboard.”*
+*Prepared as part of the M.Sc. Data Science Program, 4th Semester Project at SSODL — “Corporate Performance Forecasting and Impact Dashboard.”*
