@@ -11,7 +11,7 @@ An interactive Streamlit app that helps business leaders:
 
 ## 🔗 Live Demo
 
-[Insert your Streamlit Cloud URL here]
+https://abc-company-kpi-dashboard.streamlit.app/
 
 ---
 
