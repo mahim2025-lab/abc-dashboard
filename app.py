@@ -150,7 +150,7 @@ def show_chatbot():
         user_query = st.text_input("Type your question here:")
         if user_query:
             with st.spinner('Thinking...'):
-                model = genai.GenerativeModel("gemini-1.5-pro")
+                model = genai.GenerativeModel("gemini-pro")
                 response = model.generate_content(
                     f"You are a KPI dashboard assistant. Answer based on KPIs.\nQuestion: {user_query}"
                 )
