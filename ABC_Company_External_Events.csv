@@ -1,6 +1,7 @@
 Date,Type,Source,Message,Inventory_Impact,Revenue_Impact,Details_URL
-2023-03-15,Black Swan,External,Massive Fire at Northwest Plant,-2000000,-3000000,https://www.wbtv.com/2025/01/21/fire-reported-near-chemical-plant-northwest-charlotte/
-2023-04-20,White Swan,External,Unexpected Surge in E-commerce Demand,500000,800000,https://www.business-standard.com/industry/news/e-commerce-demand-surges-amid-heatwave-manpower-needs-increase-124052200484_1.html
-2023-05-12,Black Swan,External,Supply Chain Delays due to Trade War,-1500000,-2500000,https://www.cnbc.com/2025/04/24/unsustainable-china-trade-war-retail-shortage-warnings.html
-2023-06-10,White Swan,External,Successful Product Launch Boosted Sales,400000,600000,https://www.benamic.com/blog/sales-promotions-for-a-new-product-launch/
-2023-07-25,Black Swan,External,Hurricane Disruptions in Southeast Region,-1000000,-2000000,https://www.aljazeera.com/news/2024/9/29/hurricane-helene-devastates-southeastern-us-millions-without-power
+15-03-2023,Black Swan,External,Massive Fire at Northwest Plant,-2000000,-3000000,https://www.wbtv.com/2025/01/21/fire-reported-near-chemical-plant-northwest-charlotte/
+20-04-2023,White Swan,External,Unexpected Surge in E-commerce Demand,500000,800000,https://www.business-standard.com/industry/news/e-commerce-demand-surges-amid-heatwave-manpower-needs-increase-124052200484_1.html
+12-05-2023,Black Swan,External,Supply Chain Delays due to Trade War,-1500000,-2500000,https://www.cnbc.com/2025/04/24/unsustainable-china-trade-war-retail-shortage-warnings.html
+10-06-2023,White Swan,External,Successful Product Launch Boosted Sales,400000,600000,https://www.benamic.com/blog/sales-promotions-for-a-new-product-launch/
+25-07-2023,Black Swan,External,Hurricane Disruptions in Southeast Region,-1000000,-2000000,https://www.aljazeera.com/news/2024/9/29/hurricane-helene-devastates-southeastern-us-millions-without-power
+12-08-2023,White Swan,External,Stagflation Risk Rises Amid Sharp Slowdown in Growth,500000,700000,https://www.worldbank.org/en/news/press-release/2022/06/07/stagflation-risk-rises-amid-sharp-slowdown-in-growth-energy-markets
