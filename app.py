@@ -154,7 +154,7 @@ def show_chatbot():
                     model = genai.GenerativeModel("gemini-pro")
                     response = model.generate_content(f"Question: {user_query}")
                     st.success(response.text)
-                except Exception as e:
+                    except Exception as e:
                     st.error("Chatbot is currently unavailable or quota is exhausted. Please try again later."
 
 def main():
