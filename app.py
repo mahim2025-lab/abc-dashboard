@@ -8,13 +8,9 @@ import matplotlib.dates as mdates
 import plotly.express as px
 import google.generativeai as genai
 
-# --- Page Configuration ---
 st.set_page_config(page_title="ABC Company Dashboard", layout="wide")
-
-# --- Gemini API Configuration ---
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-# --- Data Loading Functions ---
 @st.cache_data
 def load_kpi_data(path="ABC_Company_KPI_Data.csv"):
     df = pd.read_csv(path, parse_dates=["Date"])
@@ -30,7 +26,6 @@ def load_external_events(path="ABC_Company_External_Events.csv"):
     df["Source"] = "External"
     return df
 
-# --- Helper Functions ---
 def show_kpi_summary(df):
     latest = df.iloc[-1]
     col1, col2, col3, col4 = st.columns(4)
@@ -41,13 +36,10 @@ def show_kpi_summary(df):
 
 def show_selected_event_alerts(ext_df):
     st.header("1. External Event Alerts")
-    
     available_types = ext_df["Type"].unique().tolist()
     selected_types = st.multiselect("Filter by Event Type:", options=available_types, default=available_types)
-
     filtered_events = ext_df[ext_df["Type"].isin(selected_types)]
     prioritized_events = filtered_events.sort_values(by="Revenue_Impact", key=abs, ascending=False).head(6)
-
     for _, event in prioritized_events.iterrows():
         with st.container():
             st.subheader(f"{event['Type']}: {event['Message']}")
@@ -90,8 +82,10 @@ def show_kpi_monitoring(df):
         plt.xticks(rotation=45)
         st.pyplot(fig)
 
-def show_forecasting(df, selected_kpi="Revenue", horizon=6):
+def show_forecasting(df):
     st.header("3. Forecasting")
+    selected_kpi = st.selectbox("Select KPI to Forecast:", ["Revenue", "Profit_Margin", "ROA", "Inventory_Levels"])
+    horizon = st.slider("Select forecast horizon (months):", min_value=3, max_value=12, step=1, value=6)
     df_forecast = df.dropna()
     df_forecast["Month_Index"] = np.arange(len(df_forecast))
     X = df_forecast[["Month_Index"]]
@@ -99,16 +93,15 @@ def show_forecasting(df, selected_kpi="Revenue", horizon=6):
     model = LinearRegression().fit(X, y)
     future_idx = np.arange(len(df_forecast), len(df_forecast) + horizon).reshape(-1, 1)
     preds = model.predict(future_idx)
-
     fig, ax = plt.subplots()
     ax.plot(df_forecast["Date"], y, label="Historical")
     future_dates = pd.date_range(start=df_forecast["Date"].iloc[-1] + pd.offsets.MonthBegin(), periods=horizon, freq="MS")
     ax.plot(future_dates, preds, linestyle="--", label="Forecast")
     ax.legend()
+    ax.set_title(f"{selected_kpi} Forecast")
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%b\n%y'))
     plt.xticks(rotation=45)
     st.pyplot(fig)
-
     return fig
 
 def show_impact_analysis(ext_df, forecast_fig):
@@ -122,7 +115,6 @@ def show_impact_analysis(ext_df, forecast_fig):
     )
     fig_imp.update_layout(barmode="group", xaxis_tickformat="%b %Y")
     st.plotly_chart(fig_imp, use_container_width=True)
-
     st.subheader("Forecast with Event Annotations")
     for _, ev in ext_df.iterrows():
         forecast_fig.gca().axvline(x=ev["Date"], color="red", linestyle="--")
@@ -139,12 +131,10 @@ def show_impact_analysis(ext_df, forecast_fig):
 def show_chatbot():
     if "chat_open" not in st.session_state:
         st.session_state.chat_open = False
-
     chat_cols = st.columns([8, 1])
     with chat_cols[1]:
         if st.button("💬 Open Chat", key="chat_button"):
             st.session_state.chat_open = not st.session_state.chat_open
-
     if st.session_state.chat_open:
         st.subheader("KPI Assistant")
         user_query = st.text_input("Type your question here:")
@@ -160,9 +150,7 @@ def show_chatbot():
 def main():
     kpi_df = load_kpi_data()
     ext_df = load_external_events()
-
     st.title("ABC Company: KPI Dashboard")
-
     show_chatbot()
     show_kpi_summary(kpi_df)
     show_selected_event_alerts(ext_df)
