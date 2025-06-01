@@ -6,10 +6,10 @@ from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import plotly.express as px
-import google.generativeai as genai
+import openai
 
 st.set_page_config(page_title="ABC Company Dashboard", layout="wide")
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 @st.cache_data
 def load_kpi_data(path="ABC_Company_KPI_Data.csv"):
@@ -34,16 +34,12 @@ def show_kpi_summary(df):
     col3.metric("Latest ROA", f"{latest['ROA']:.2%}", f"{latest['ROA_Change']*100:.1f}%")
     col4.metric("Latest Inventory Level", f"${latest['Inventory_Levels']:,.0f}", f"{latest['Inventory_Change']*100:.1f}%")
 
-
 def show_selected_event_alerts(ext_df):
     st.header("1. External Event Alerts")
-
     available_types = ext_df["Type"].unique().tolist()
     selected_types = st.multiselect("Filter by Event Type:", options=available_types, default=available_types)
-
     filtered_events = ext_df[ext_df["Type"].isin(selected_types)]
     prioritized_events = filtered_events.sort_values(by="Revenue_Impact", key=abs, ascending=False).head(6)
-
     rows = [prioritized_events[i:i+3] for i in range(0, len(prioritized_events), 3)]
     for row in rows:
         cols = st.columns(len(row))
@@ -54,6 +50,7 @@ def show_selected_event_alerts(ext_df):
                 st.write(f"💸 Revenue Impact: ${event['Revenue_Impact']:,.0f}")
                 st.write(f"📦 Inventory Impact: ${event['Inventory_Impact']:,.0f}")
                 st.link_button("View Details", event['Details_URL'])
+
 def show_kpi_monitoring(df):
     st.header("2. KPI Monitoring")
     cols = st.columns(2)
@@ -146,11 +143,19 @@ def show_chatbot():
         if user_query:
             with st.spinner('Thinking...'):
                 try:
-                    model = genai.GenerativeModel("gemini-pro")
-                    response = model.generate_content(f"Question: {user_query}")
-                    st.success(response.text)
+                    response = openai.ChatCompletion.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": "You are a KPI dashboard assistant. Answer based on KPIs and business performance."},
+                            {"role": "user", "content": user_query}
+                        ],
+                        temperature=0.3,
+                        max_tokens=500
+                    )
+                    answer = response['choices'][0]['message']['content']
+                    st.success(answer)
                 except Exception as e:
-                    st.error("Chatbot is currently unavailable or quota is exhausted. Please try again later.")
+                    st.error(f"Chatbot unavailable: {str(e)}")
 
 def main():
     kpi_df = load_kpi_data()
