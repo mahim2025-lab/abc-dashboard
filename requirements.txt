@@ -6,3 +6,4 @@ scikit-learn
 matplotlib
 plotly
 google-generativeai
+openai==1.30.1 #latest as of today
